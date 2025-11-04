@@ -1,13 +1,14 @@
 LA64是基于RISCV_DV开发的LA64架构随机代码生成器
+
 使用方法：
-'''bash
+```bash
 pip3 install -r requirements.txt  # 最好在python虚拟环境中
 python3 run.py
-'''
+```
 查看帮助：
-'''bash
+```bash
 python3 run.py --help
-'''
+```
 
 原README：
 ## Overview
