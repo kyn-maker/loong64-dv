@@ -102,8 +102,6 @@ class riscv_floating_point_instr extends riscv_instr;
         else if (instr_name inside {FLDGT_S, FLDGT_D, FLDLE_S, FLDLE_D, FSTGT_S, FSTGT_D, FSTLE_S, FSTLE_D}) begin
           asm_str = $sformatf("%0s$%0s, $%0s, $%0s", asm_str, fd.name(), rs1.name(), rs2.name());
         end
-        // LoongArch 浮点指令：fd, fj, fk (3个浮点寄存器)
-        // 注意：LoongArch 使用 fj, fk 作为源寄存器，fd 作为目标寄存器
         // 在框架中，fs1 对应 fj，fs2 对应 fk，fd 对应 fd
         else begin
           asm_str = $sformatf("%0s$%0s, $%0s, $%0s", asm_str, fd.name(), fs1.name(), fs2.name());
@@ -112,11 +110,8 @@ class riscv_floating_point_instr extends riscv_instr;
         // FSEL 指令：fd, fj, fk, ca (3个浮点寄存器 + 条件标志寄存器)
         if (instr_name == FSEL) begin
           // FSEL 指令格式：fsel fd, fj, fk, ca
-          // 在框架中，fd 对应 fd，fs1 对应 fj，fs2 对应 fk，ca 是条件标志寄存器（CFR）
           asm_str = $sformatf("%0s$%0s, $%0s, $%0s, $fcc%0d", asm_str, fd.name(), fs1.name(), fs2.name(), cfr);
         end else begin
-          // LoongArch 浮点指令：fd, fj, fk, fa (4个浮点寄存器)
-          // 在框架中，fs1 对应 fj，fs2 对应 fk，fs3 对应 fa，fd 对应 fd
           asm_str = $sformatf("%0s$%0s, $%0s, $%0s, $%0s", asm_str, fd.name(), fs1.name(), fs2.name(), fs3.name());
         end
       default:
@@ -137,84 +132,84 @@ class riscv_floating_point_instr extends riscv_instr;
       R2_TYPE: begin
         // GPR到FCSR移动指令：fcsr, rj (FCSR目标，GPR源)
         if (instr_name == MOVGR2FCSR) begin
-          has_rs1 = 1'b1;  // rj (GPR源)
+          has_rs1 = 1'b1;  
           has_rs2 = 1'b0;
           has_rd  = 1'b0;
           has_fs1 = 1'b0;
           has_fs2 = 1'b0;
-          has_fd  = 1'b0;  // FCSR是特殊寄存器，不使用fd
+          has_fd  = 1'b0;  
           has_fs3 = 1'b0;
-          has_fcsr = 1'b1;  // 使用FCSR寄存器
+          has_fcsr = 1'b1; 
           has_imm = 1'b0;
         end
         // FCSR到GPR移动指令：rd, fcsr (GPR目标，FCSR源)
         else if (instr_name == MOVFCSR2GR) begin
           has_rs1 = 1'b0;
           has_rs2 = 1'b0;
-          has_rd  = 1'b1;  // rd (GPR目标)
-          has_fs1 = 1'b0;  // FCSR是特殊寄存器，不使用fs1
+          has_rd  = 1'b1;  
+          has_fs1 = 1'b0; 
           has_fs2 = 1'b0;
           has_fd  = 1'b0;
           has_fs3 = 1'b0;
-          has_fcsr = 1'b1;  // 使用FCSR寄存器
+          has_fcsr = 1'b1; 
           has_imm = 1'b0;
         end
         // FPR到CF移动指令：cd, fj (CF目标，FPR源)
         else if (instr_name == MOVFR2CF) begin
           has_rs1 = 1'b0;
           has_rs2 = 1'b0;
-          has_rd  = 1'b0;  // 不使用rd，使用cfr字段
-          has_fs1 = 1'b1;  // fj (FPR源)
+          has_rd  = 1'b0;  
+          has_fs1 = 1'b1;  
           has_fs2 = 1'b0;
           has_fd  = 1'b0;
           has_fs3 = 1'b0;
-          has_cfr = 1'b1;  // 使用CFR寄存器
+          has_cfr = 1'b1;  
           has_imm = 1'b0;
         end
         // CF到FPR移动指令：fd, cj (FPR目标，CF源)
         else if (instr_name == MOVCF2FR) begin
-          has_rs1 = 1'b0;  // 不使用rs1，使用cfr字段
+          has_rs1 = 1'b0;  
           has_rs2 = 1'b0;
           has_rd  = 1'b0;
           has_fs1 = 1'b0;
           has_fs2 = 1'b0;
-          has_fd  = 1'b1;  // fd (FPR目标)
+          has_fd  = 1'b1;  
           has_fs3 = 1'b0;
-          has_cfr = 1'b1;  // 使用CFR寄存器
+          has_cfr = 1'b1;  
           has_imm = 1'b0;
         end
         // GPR到CF移动指令：cd, rj (CF目标，GPR源)
         else if (instr_name == MOVGR2CF) begin
-          has_rs1 = 1'b1;  // rj (GPR源)
+          has_rs1 = 1'b1;  
           has_rs2 = 1'b0;
-          has_rd  = 1'b0;  // 不使用rd，使用cfr字段
+          has_rd  = 1'b0;  
           has_fs1 = 1'b0;
           has_fs2 = 1'b0;
           has_fd  = 1'b0;
           has_fs3 = 1'b0;
-          has_cfr = 1'b1;  // 使用CFR寄存器
+          has_cfr = 1'b1;  
           has_imm = 1'b0;
         end
         // CF到GPR移动指令：rd, cj (GPR目标，CF源)
         else if (instr_name == MOVCF2GR) begin
-          has_rs1 = 1'b0;  // 不使用rs1，使用cfr字段
+          has_rs1 = 1'b0;  
           has_rs2 = 1'b0;
-          has_rd  = 1'b1;  // rd (GPR目标)
+          has_rd  = 1'b1;  
           has_fs1 = 1'b0;
           has_fs2 = 1'b0;
           has_fd  = 1'b0;
           has_fs3 = 1'b0;
-          has_cfr = 1'b1;  // 使用CFR寄存器
+          has_cfr = 1'b1;  
           has_imm = 1'b0;
         end
         // GPR到FPR移动指令：fd, rj (FPR目标，GPR源)
         else if (instr_name inside {MOVGR2FR_W, MOVGR2FRH_W, MOVGR2FR_D}) begin
-          has_rs1 = 1'b1;  // rj (GPR源)
+          has_rs1 = 1'b1;  
           has_rs2 = 1'b0;
           has_rd  = 1'b0;
           has_fs1 = 1'b0;
           has_fs2 = 1'b0;
-          has_fd  = 1'b1;  // fd (FPR目标)
+          has_fd  = 1'b1;  
           has_fs3 = 1'b0;
           has_imm = 1'b0;
         end
@@ -222,8 +217,8 @@ class riscv_floating_point_instr extends riscv_instr;
         else if (instr_name inside {MOVFR2GR_S, MOVFR2GR_D, MOVFRH2GR_S}) begin
           has_rs1 = 1'b0;
           has_rs2 = 1'b0;
-          has_rd  = 1'b1;  // rd (GPR目标)
-          has_fs1 = 1'b1;  // fj (FPR源)
+          has_rd  = 1'b1;  
+          has_fs1 = 1'b1;  
           has_fs2 = 1'b0;
           has_fd  = 1'b0;
           has_fs3 = 1'b0;
@@ -231,9 +226,9 @@ class riscv_floating_point_instr extends riscv_instr;
         end
         // LoongArch 浮点指令：fd, fj (2个浮点寄存器)
         else begin
-          has_fs1 = 1'b1;  // fj
+          has_fs1 = 1'b1;  
           has_fs2 = 1'b0;
-          has_fd  = 1'b1;  // fd
+          has_fd  = 1'b1;  
           has_fs3 = 1'b0;
           has_imm = 1'b0;
         end
@@ -241,14 +236,14 @@ class riscv_floating_point_instr extends riscv_instr;
       R2I12_TYPE: begin
         // 浮点加载/存储指令（立即数偏移）：fd, rj, si12 (FPR，GPR基址，12位立即数)
         if (instr_name inside {FLD_S, FLD_D, FST_S, FST_D}) begin
-          has_rs1 = 1'b1;  // rj (GPR基址)
+          has_rs1 = 1'b1;  
           has_rs2 = 1'b0;
           has_rd  = 1'b0;
           has_fs1 = 1'b0;
           has_fs2 = 1'b0;
-          has_fd  = 1'b1;  // fd (FPR)
+          has_fd  = 1'b1;  
           has_fs3 = 1'b0;
-          has_imm = 1'b1;  // 12位立即数偏移
+          has_imm = 1'b1;  
         end
         else begin
           // 其他R2I12_TYPE格式指令，调用基类处理
@@ -258,40 +253,40 @@ class riscv_floating_point_instr extends riscv_instr;
       R3_TYPE: begin
         // 浮点比较指令：cd, fj, fk, cond (条件标志寄存器，2个浮点寄存器，条件码)
         if (instr_name inside {FCMP_S, FCMP_D}) begin
-          has_fs1 = 1'b1;  // fj
-          has_fs2 = 1'b1;  // fk
-          has_fd  = 1'b0;  // 不使用fd，使用cfr
+          has_fs1 = 1'b1;  
+          has_fs2 = 1'b1;  
+          has_fd  = 1'b0;  
           has_fs3 = 1'b0;
-          has_cfr = 1'b1;  // cd (条件标志寄存器)
-          has_imm = 1'b1;  // cond (条件码，5位)
+          has_cfr = 1'b1;  
+          has_imm = 1'b1;  
         end
         // 浮点加载/存储指令（索引寻址）：fd, rj, rk (FPR，GPR基址，GPR索引)
         else if (instr_name inside {FLDX_S, FLDX_D, FSTX_S, FSTX_D}) begin
-          has_rs1 = 1'b1;  // rj (GPR基址)
-          has_rs2 = 1'b1;  // rk (GPR索引)
+          has_rs1 = 1'b1;  
+          has_rs2 = 1'b1;  
           has_rd  = 1'b0;
           has_fs1 = 1'b0;
           has_fs2 = 1'b0;
-          has_fd  = 1'b1;  // fd (FPR)
+          has_fd  = 1'b1;  
           has_fs3 = 1'b0;
           has_imm = 1'b0;
         end
         // 浮点边界检查加载/存储指令：fd, rj, rk (FPR，GPR基址，GPR边界)
         else if (instr_name inside {FLDGT_S, FLDGT_D, FLDLE_S, FLDLE_D, FSTGT_S, FSTGT_D, FSTLE_S, FSTLE_D}) begin
-          has_rs1 = 1'b1;  // rj (GPR基址)
-          has_rs2 = 1'b1;  // rk (GPR边界)
+          has_rs1 = 1'b1;  
+          has_rs2 = 1'b1;  
           has_rd  = 1'b0;
           has_fs1 = 1'b0;
           has_fs2 = 1'b0;
-          has_fd  = 1'b1;  // fd (FPR)
+          has_fd  = 1'b1;  
           has_fs3 = 1'b0;
           has_imm = 1'b0;
         end
         // LoongArch 浮点指令：fd, fj, fk (3个浮点寄存器)
         else begin
-          has_fs1 = 1'b1;  // fj
-          has_fs2 = 1'b1;  // fk
-          has_fd  = 1'b1;  // fd
+          has_fs1 = 1'b1;  
+          has_fs2 = 1'b1;  
+          has_fd  = 1'b1;  
           has_fs3 = 1'b0;
           has_imm = 1'b0;
         end
@@ -299,33 +294,33 @@ class riscv_floating_point_instr extends riscv_instr;
       R4_TYPE: begin
         // FSEL 指令：fd, fj, fk, ca (3个浮点寄存器 + 条件标志寄存器)
         if (instr_name == FSEL) begin
-          has_fs1 = 1'b1;  // fj
-          has_fs2 = 1'b1;  // fk
-          has_fd  = 1'b1;  // fd
-          has_fs3 = 1'b0;  // 不使用 fs3
-          has_imm = 1'b0;  // 不使用立即数
-          has_cfr = 1'b1;  // ca 是条件标志寄存器（CFR）
+          has_fs1 = 1'b1;  
+          has_fs2 = 1'b1;  
+          has_fd  = 1'b1;  
+          has_fs3 = 1'b0;  
+          has_imm = 1'b0;  
+          has_cfr = 1'b1;  
         end else begin
           // LoongArch 浮点指令：fd, fj, fk, fa (4个浮点寄存器)
-          has_fs1 = 1'b1;  // fj
-          has_fs2 = 1'b1;  // fk
-          has_fs3 = 1'b1;  // fa
-          has_fd  = 1'b1;  // fd
+          has_fs1 = 1'b1;  
+          has_fs2 = 1'b1;  
+          has_fs3 = 1'b1;  
+          has_fd  = 1'b1;  
           has_imm = 1'b0;
         end
       end
       R1I21_TYPE: begin
         // 基于条件标志的分支指令：cj, offs21 (CF寄存器 + 21位偏移)
         if (instr_name inside {BCEQZ, BCNEZ}) begin
-          has_rs1 = 1'b0;  // 不使用rs1，使用cfr字段
+          has_rs1 = 1'b0;  
           has_rs2 = 1'b0;
           has_rd  = 1'b0;
           has_fs1 = 1'b0;
           has_fs2 = 1'b0;
           has_fd  = 1'b0;
           has_fs3 = 1'b0;
-          has_cfr = 1'b1;  // 使用CFR寄存器
-          has_imm = 1'b1;  // 21位偏移量
+          has_cfr = 1'b1;  
+          has_imm = 1'b1;  
         end
         else begin
           // 其他R1I21_TYPE格式指令，调用基类处理
